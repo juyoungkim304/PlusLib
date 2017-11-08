@@ -108,7 +108,7 @@ See License.txt for details.
 #endif
 
 #ifdef PLUS_USE_INTELREALSENSE
-#include "vtkPlusIntelRealSenseVideoSource.h"
+#include "vtkPlusIntelRSVideoSource.h"
 #endif
 
 #ifdef PLUS_USE_INTERSON_VIDEO
@@ -263,7 +263,7 @@ vtkPlusDeviceFactory::vtkPlusDeviceFactory()
   RegisterDevice("ICCapturing", "vtkPlusICCapturingSource", (PointerToDevice)&vtkPlusICCapturingSource::New);
 #endif
 #ifdef PLUS_USE_INTELREALSENSE
-  RegisterDevice("IntelRealSenseVideo", "vtkPlusIntelRealSenseVideoSource", (PointerToDevice)&vtkPlusIntelRealSenseVideoSource::New);
+  RegisterDevice("IntelRSVideo", "vtkPlusIntelRSVideoSource", (PointerToDevice)&vtkPlusIntelRSVideoSource::New);
 #endif
 #ifdef PLUS_USE_INTERSON_VIDEO
   RegisterDevice("IntersonVideo", "vtkPlusIntersonVideoSource", (PointerToDevice)&vtkPlusIntersonVideoSource::New);

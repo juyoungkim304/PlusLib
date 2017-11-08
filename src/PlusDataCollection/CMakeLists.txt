@@ -469,12 +469,12 @@ ENDIF()
 # INTELREALSENSE support
 IF(PLUS_USE_INTELREALSENSE)
   SET(IntelRealSense_SRCS
-    IntelRealSense/vtkPlusIntelRealSenseVideoSource.cxx
+    IntelRealSense/vtkPlusIntelRSVideoSource.cxx
   )
 
   IF(MSVC OR ${CMAKE_GENERATOR} MATCHES "Xcode")
     SET(IntelRealSense_HDRS
-      IntelRealSense/vtkPlusIntelRealSenseVideoSource.h
+      IntelRealSense/vtkPlusIntelRSVideoSource.h
       )
   ENDIF()
 
@@ -488,23 +488,19 @@ IF(PLUS_USE_INTELREALSENSE)
 
   LIST(APPEND ${PROJECT_NAME}_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/IntelRealSense
-    ${INTELREALSENSE_INCLUDE_DIR}
+    ${RSSDK_INCLUDE_DIR}
     )
 
   LIST(APPEND ${PROJECT_NAME}_LIBS
-    optimized ${INTELREALSENSE_RELEASE_LIB}
-    debug ${INTELREALSENSE_DEBUG_LIB}
+    ${RSSDK_LIBRARY}
     )
 
-  # TODO: may need to install DLLs
+  LIST(APPEND External_Libraries_Install
+    ${RSSDK_BINARY}
+    )
+
   # should this not really follow the "standard" pattern (i.e. be a IMPORTED LIBRARY TARGET)?
   # This also seems to be missing the corresponding entry in the PlusLibConfig.cmake 
-#  LIST(APPEND External_Libraries_Install
-#    ${INTELREALSENSE_RELEASE_LIB}
-#    )
-#  SET( External_Libraries_Debug_Install ${External_Libraries_Debug_Install}
-#    ${INTELREALSENSE_DEBUG_LIB}
-#    )
 ENDIF()
 
 # --------------------------------------------------------------------------

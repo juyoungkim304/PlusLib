@@ -59,6 +59,9 @@ protected:
   vtkPlusIntelRSVideoSource();
   ~vtkPlusIntelRSVideoSource();
 
+  class vtkInternal;
+  vtkInternal* Internal;
+
   /*!
     Start the tracking system.  The tracking system is brought from
     its ground state into full tracking mode.  The POLARIS will

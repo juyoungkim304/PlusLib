@@ -581,21 +581,33 @@ ENDIF()
 #--------------------------------------------------------------------------
 # BlackMagic DeckLink support
 IF(PLUS_USE_BLACKMAGIC_DECKLINK)
-  FIND_PACKAGE(DeckLinkSDK REQUIRED)
-
   IF(MSVC OR ${CMAKE_GENERATOR} MATCHES "Xcode")
     SET(BlackMagicDeckLink_HDRS
       BlackMagic/vtkPlusDeckLinkVideoSource.h
-      ${DeckLinkSDK_INCLUDE_DIR}/DeckLinkAPIVersion.h
+      ${DECKLINK_SDK_INCLUDE_DIR}/DeckLinkAPIVersion.h
     )
   ENDIF()
 
   SET(BlackMagicDeckLink_SRCS
     BlackMagic/vtkPlusDeckLinkVideoSource.cxx
-    )
+  )
 
-  IF(UNIX AND NOT APPLE)
-    LIST(APPEND BlackMagicDeckLink_SRCS ${DeckLinkSDK_INCLUDE_DIR}/LinuxCOM.h)
+  IF(WIN32)
+    LIST(APPEND BlackMagicDeckLink_HDRS
+      BlackMagic/DeckLinkAPI_h.h
+    )
+    LIST(APPEND BlackMagicDeckLink_SRCS
+      BlackMagic/DeckLinkAPI_i.c
+    )
+  ELSEIF(UNIX)
+    LIST(APPEND BlackMagicDeckLink_HDRS
+      ${DECKLINK_SDK_INCLUDE_DIR}/DeckLinkAPI.h
+    )
+    IF(NOT MAC)
+      LIST(APPEND BlackMagicDeckLink_SRCS
+        ${DECKLINK_SDK_INCLUDE_DIR}/LinuxCOM.h
+      )
+    ENDIF()
   ENDIF()
 
   LIST(APPEND ${PROJECT_NAME}_HDRS
@@ -606,9 +618,6 @@ IF(PLUS_USE_BLACKMAGIC_DECKLINK)
     ${BlackMagicDeckLink_SRCS}
     )
 
-  LIST(APPEND ${PROJECT_NAME}_LIBS
-    DeckLinkSDK
-    )
 ENDIF()
 
 #--------------------------------------------------------------------------

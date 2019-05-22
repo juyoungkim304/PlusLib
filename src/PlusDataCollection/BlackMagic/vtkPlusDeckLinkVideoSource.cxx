@@ -11,7 +11,6 @@ See License.txt for details.
 #include "vtkIGSIOAccurateTimer.h"
 
 // VTK includes
-#include <vtkObject.h>
 
 // System includes
 #include <string>
@@ -20,26 +19,20 @@ See License.txt for details.
 // vtkPlusDeckLinkVideoSource::vtkInternal
 //----------------------------------------------------------------------------
 
-class vtkPlusDeckLinkVideoSource::vtkInternal : public vtkObject
+class vtkPlusDeckLinkVideoSource::vtkInternal
 {
-public:
-  static vtkPlusDeckLinkVideoSource::vtkInternal* New(vtkPlusDeckLinkVideoSource*);
-  vtkTypeMacro(vtkInternal, vtkObject);
-
 public:
   vtkPlusDeckLinkVideoSource* External;
 
   vtkInternal(vtkPlusDeckLinkVideoSource* external)
     : External(external)
-  {}
+  {
+  }
 
   virtual ~vtkInternal()
-  {}
-private:
-  static vtkPlusDeckLinkVideoSource::vtkInternal* New();
-  vtkInternal()
-    : External(nullptr)
-  {}
+  {
+  }
+
 };
 
 //----------------------------------------------------------------------------
@@ -47,21 +40,11 @@ private:
 //----------------------------------------------------------------------------
 
 vtkStandardNewMacro(vtkPlusDeckLinkVideoSource);
-vtkStandardNewMacro(vtkPlusDeckLinkVideoSource::vtkInternal);
-
-//----------------------------------------------------------------------------
-vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource::vtkInternal* vtkPlusDeckLinkVideoSource::vtkInternal::New(vtkPlusDeckLinkVideoSource* _arg)
-{
-  vtkPlusDeckLinkVideoSource::vtkInternal* result = new vtkPlusDeckLinkVideoSource::vtkInternal();
-  result->InitializeObjectBase();
-  result->External = _arg;
-  return result;
-}
 
 //----------------------------------------------------------------------------
 vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
   : vtkPlusDevice()
-  , Internal(vtkInternal::New(this))
+  , Internal(new vtkInternal(this))
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()");
 
@@ -75,8 +58,8 @@ vtkPlusDeckLinkVideoSource::~vtkPlusDeckLinkVideoSource()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::~vtkPlusDeckLinkVideoSource()");
 
-  this->Internal->Delete();
-  this->Internal = nullptr;
+  delete Internal;
+  Internal = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -94,6 +77,22 @@ PlusStatus vtkPlusDeckLinkVideoSource::ReadConfiguration(vtkXMLDataElement* root
   XML_FIND_DEVICE_ELEMENT_REQUIRED_FOR_READING(deviceConfig, rootConfigElement);
 
   XML_FIND_NESTED_ELEMENT_REQUIRED(dataSourcesElement, deviceConfig, "DataSources");
+  
+  for (int nestedElementIndex = 0; nestedElementIndex < dataSourcesElement->GetNumberOfNestedElements(); nestedElementIndex++)
+  {
+    vtkXMLDataElement* toolDataElement = dataSourcesElement->GetNestedElement(nestedElementIndex);
+    if (STRCASECMP(toolDataElement->GetName(), "DataSource") != 0)
+    {
+      // if this is not a data source element, skip it
+      continue;
+    }
+    if (toolDataElement->GetAttribute("Type") != NULL && STRCASECMP(toolDataElement->GetAttribute("Type"), "Video") != 0)
+    {
+      // if this is not a Tool element, skip it
+      continue;
+    }
+    
+  }
 
   return PLUS_SUCCESS;
 }

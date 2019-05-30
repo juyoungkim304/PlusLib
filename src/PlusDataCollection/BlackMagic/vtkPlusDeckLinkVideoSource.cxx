@@ -66,7 +66,7 @@ vtkPlusDeckLinkVideoSource::~vtkPlusDeckLinkVideoSource()
 void vtkPlusDeckLinkVideoSource::PrintSelf(ostream& os, vtkIndent indent)
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::PrintSelf(ostream& os, vtkIndent indent)");
-  Superclass::PrintSelf(os, indent);
+  this -> Superclass::PrintSelf(os, indent);
 }
 
 //----------------------------------------------------------------------------
@@ -102,23 +102,40 @@ PlusStatus vtkPlusDeckLinkVideoSource::WriteConfiguration(vtkXMLDataElement* roo
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::WriteConfiguration");
   XML_FIND_DEVICE_ELEMENT_REQUIRED_FOR_WRITING(deviceConfig, rootConfigElement);
-  return PLUS_FAIL;
+  
+  return PLUS_SUCCESS;
 }
 
 //----------------------------------------------------------------------------
 PlusStatus vtkPlusDeckLinkVideoSource::InternalConnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalConnect");
+  if (this->Device == NULL)
+  {
+    this->Device = new DeckLink();
+  }
 
-  return PLUS_FAIL;
+  if (this->Device->Connect() != PLUS_SUCCESS)
+  {
+    LOG_ERROR("vtkPlusDeckLinkVideoSource device initialization failed");
+    this->ConnectedToDevice = false;
+    return PLUS_FAIL;
+  }
+  this->ConnectedToDevice = true;
+
+  return PLUS_SUCCESS;
 }
 
 //----------------------------------------------------------------------------
 PlusStatus vtkPlusDeckLinkVideoSource::InternalDisconnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalDisconnect");
-
-  return PLUS_FAIL;
+  LOG_DEBUG("Disconnect from DeckLink");
+  this->Device->Disconnect();
+  delete this->Device;
+  this->Device = NULL;
+  this->ConnectedToDevice = false;
+  return PLUS_SUCCESS;
 }
 
 //----------------------------------------------------------------------------

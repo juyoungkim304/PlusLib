@@ -8,10 +8,12 @@ See License.txt for details.
 #define __vtkPlusDeckLinkVideoSource_h
 
 #include "vtkPlusDataCollectionExport.h"
-#include "vtkPlusDevice.h"
+#include "vtkPlusUsDevice.h"
+
 
 #include <combaseapi.h>
 // BlackMagic SDK includes
+#include "DeckLink.h"
 #ifdef _WIN32
 #include "DeckLinkAPI_h.h"
 #else
@@ -62,6 +64,8 @@ public:
 protected:
   vtkPlusDeckLinkVideoSource();
   ~vtkPlusDeckLinkVideoSource();
+  DeckLink* Device;
+  bool ConnectedToDevice;
 
 private:
   vtkPlusDeckLinkVideoSource(const vtkPlusDeckLinkVideoSource&); // Not implemented

@@ -47,6 +47,7 @@ void DeckLink::StartRecording()
   IDeckLinkInput::SetCallback();
   IDeckLinkInput::StartStreams();
 }
+
 void DeckLink::StopRecording()
 {
   IDeckLinkInput::StopStreams();

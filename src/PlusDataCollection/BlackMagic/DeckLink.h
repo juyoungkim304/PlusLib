@@ -7,6 +7,8 @@
 #ifndef DeckLink_h
 #define DeckLink_h
 
+#include "igsioCommon.h"
+
 #ifdef _WIN32
 #include "DeckLinkAPI_h.h"
 #else

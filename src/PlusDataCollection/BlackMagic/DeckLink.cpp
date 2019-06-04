@@ -17,8 +17,7 @@
 DeckLink::DeckLink()
 {
   IDeckLinkIterator *deckLinkIterator = NULL;
-  CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_
-  IDeckLinkIterator, (void**)&deckLinkIterator);
+  CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_IDeckLinkIterator, (void**)&deckLinkIterator);
   
   IDeckLinkInput::GetDisplayModelIterator();
   

@@ -23,6 +23,11 @@
 #define __REQUIRED_RPCNDR_H_VERSION__ 500
 #endif
 
+/* JMF: You must include Unknwn.h here in order to define the "interface" keyword used by the typedefs in this file.  
+   I actually was able to build with the DeckLink library on a seperate project without doing this, but it seems that
+   something is different about buiding in PlusLib. A few forums online showed that Unknown.h will get included only if
+   WIN32_LEAN_AND_MEAN is not defined, so it's likely that this is some kind of Plus optimization thing.*/
+#include "Unknwn.h"
 #include "rpc.h"
 #include "rpcndr.h"
 

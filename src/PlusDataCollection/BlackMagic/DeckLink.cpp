@@ -14,14 +14,11 @@
 #define SAFE_RELEASE(x) { if (x) x->Release(); x = NULL: }
 
 //----------------------------------------------------------------------------
-DeckLink::DeckLink()
+DeckLink::DeckLink() : result(NULL), deckLinkIterator(NULL), deckLinkInput(NULL)
 {
-  IDeckLinkIterator *deckLinkIterator = NULL;
-  CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_IDeckLinkIterator, (void**)&deckLinkIterator);
-  
-  IDeckLinkInput::GetDisplayModelIterator();
-  
-  CoInitialize();
+  result = CoInitialize(NULL);
+  result = CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_IDeckLinkIterator, (void**)& deckLinkIterator);
+  result = deckLinkInput -> IDeckLinkInput::GetDisplayModeIterator();
 }
 
 DeckLink::~DeckLink()
@@ -32,24 +29,24 @@ DeckLink::~DeckLink()
 
 PlusStatus DeckLink::Connect()
 {
-  IDeckLinkInput::EnableVideoInput();
+  result = deckLinkInput -> IDeckLinkInput::EnableVideoInput();
   return PLUS_SUCCESS;
 }
 
 void DeckLink::Disconnect()
 {
-  IDeckLinkInput::DisableVideoInput();
+  result = deckLinkInput -> IDeckLinkInput::DisableVideoInput();
 }
 
 void DeckLink::StartRecording()
 {
-  IDeckLinkInput::SetCallback();
-  IDeckLinkInput::StartStreams();
+  result = deckLinkInput -> IDeckLinkInput::SetCallback();
+  result = deckLinkInput -> IDeckLinkInput::StartStreams();
 }
 
 void DeckLink::StopRecording()
 {
-  IDeckLinkInput::StopStreams();
+  result = deckLinkInput -> IDeckLinkInput::StopStreams();
 
 }
 

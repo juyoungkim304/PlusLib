@@ -33,5 +33,10 @@ public:
   bool CheckProbe();
   unsigned char* CaptureFrame();
 
+private:
+  HRESULT result;
+  IDeckLinkIterator* deckLinkIterator;
+  IDeckLinkInput* deckLinkInput;
+
  };
 #endif //DeckLink

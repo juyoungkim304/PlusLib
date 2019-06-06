@@ -18,7 +18,7 @@
 // STL includes
 #include <vector>
 
-class DeckLink
+class DeckLink : public IDeckLinkInputCallback
 {
 public:
   DeckLink();
@@ -27,16 +27,19 @@ public:
   PlusStatus Connect();
   void Disconnect();
   
-  void StartRecording();
+  void StartRecording(unsigned int videoModeIndex);
   void StopRecording();
 
   bool CheckProbe();
-  unsigned char* CaptureFrame();
+  ///unsigned char* CaptureFrame();
 
 private:
   HRESULT result;
+  IDeckLink* deckLink;
   IDeckLinkIterator* deckLinkIterator;
   IDeckLinkInput* deckLinkInput;
+  IDeckLinkDisplayModeIterator* displayModeIterator;
+  std::vector<IDeckLinkDisplayMode*> modeList;
 
  };
 #endif //DeckLink

@@ -10,15 +10,16 @@
 
 #include <math.h>
 #include <string>
+#include <comutil.h>
 
 #define SAFE_RELEASE(x) { if (x) x->Release(); x = NULL: }
 
 //----------------------------------------------------------------------------
-DeckLink::DeckLink() : result(NULL), deckLinkIterator(NULL), deckLinkInput(NULL)
+DeckLink::DeckLink() : result(NULL), deckLinkIterator(NULL), deckLinkInput(NULL), displayModeIterator(NULL)
 {
   result = CoInitialize(NULL);
   result = CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_IDeckLinkIterator, (void**)& deckLinkIterator);
-  result = deckLinkInput -> IDeckLinkInput::GetDisplayModeIterator();
+  result = deckLinkInput -> GetDisplayModeIterator(&displayModeIterator);
 }
 
 DeckLink::~DeckLink()
@@ -29,24 +30,27 @@ DeckLink::~DeckLink()
 
 PlusStatus DeckLink::Connect()
 {
-  result = deckLinkInput -> IDeckLinkInput::EnableVideoInput();
+  deckLinkInput->SetCallback(this);
   return PLUS_SUCCESS;
 }
 
 void DeckLink::Disconnect()
 {
-  result = deckLinkInput -> IDeckLinkInput::DisableVideoInput();
+  result = deckLinkInput -> DisableVideoInput();
 }
 
-void DeckLink::StartRecording()
+void DeckLink::StartRecording(unsigned int videoModeIndex)
 {
-  result = deckLinkInput -> IDeckLinkInput::SetCallback();
-  result = deckLinkInput -> IDeckLinkInput::StartStreams();
+  BMDVideoInputFlags videoInputFlags = bmdVideoInputFlagDefault;
+  result = deckLinkInput->EnableVideoInput(modeList[videoModeIndex]->GetDisplayMode(), bmdFormat8BitYUV, videoInputFlags);
+  deckLinkInput -> StartStreams();
 }
 
 void DeckLink::StopRecording()
 {
-  result = deckLinkInput -> IDeckLinkInput::StopStreams();
+  result = deckLinkInput -> StopStreams();
+  deckLinkInput->SetScreenPreviewCallback(NULL);
+  deckLinkInput->SetCallback(NULL);
 
 }
 
@@ -56,6 +60,8 @@ bool DeckLink::CheckProbe()
 	return true;
 }
 
+/*
 unsigned char* DeckLink::CaptureFrame()
 {
 }
+*/

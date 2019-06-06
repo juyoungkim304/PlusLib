@@ -110,10 +110,12 @@ PlusStatus vtkPlusDeckLinkVideoSource::WriteConfiguration(vtkXMLDataElement* roo
 PlusStatus vtkPlusDeckLinkVideoSource::InternalConnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalConnect");
+  /*
   if (this->Device == NULL)
   {
     this->Device = new DeckLink();
   }
+  */
 
   if (this->Device->Connect() != PLUS_SUCCESS)
   {

@@ -32,6 +32,7 @@ public:
   virtual ~vtkInternal()
   {
   }
+	DeckLink* Device;
 
 };
 
@@ -48,6 +49,7 @@ vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()");
 
+	DeckLink* Device = new DeckLink();
   this->FrameNumber = 0;
   this->StartThreadForInternalUpdates = true;
   this->InternalUpdateRate = 30;

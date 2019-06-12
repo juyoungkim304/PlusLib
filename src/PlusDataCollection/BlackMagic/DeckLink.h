@@ -18,28 +18,23 @@
 // STL includes
 #include <vector>
 
-class DeckLink : public IDeckLinkInputCallback
+
+class deckLinkDelegate : public IDeckLinkInputCallback
 {
-public:
-  DeckLink();
-  virtual ~DeckLink();
-  
-  PlusStatus Connect();
-  void Disconnect();
-  
-  void StartRecording(unsigned int videoModeIndex);
-  void StopRecording();
-
-  bool CheckProbe();
-  ///unsigned char* CaptureFrame();
-
 private:
-  HRESULT result;
-  IDeckLink* deckLink;
-  IDeckLinkIterator* deckLinkIterator;
-  IDeckLinkInput* deckLinkInput;
-  IDeckLinkDisplayModeIterator* displayModeIterator;
-  std::vector<IDeckLinkDisplayMode*> modeList;
+	int	refCount;
+	IDeckLink* myDevice;
 
- };
+public:
+	deckLinkDelegate(IDeckLink* device);
+
+	virtual HRESULT STDMETHODCALLTYPE	QueryInterface(REFIID iid, LPVOID* ppv);
+	virtual ULONG STDMETHODCALLTYPE		AddRef(void);
+	virtual ULONG STDMETHODCALLTYPE		Release(void);
+
+	// IDeckLinkInputCallback interface
+	virtual HRESULT STDMETHODCALLTYPE	VideoInputFormatChanged(/* in */ BMDVideoInputFormatChangedEvents notificationEvents, /* in */ IDeckLinkDisplayMode* newDisplayMode, /* in */ BMDDetectedVideoInputFormatFlags detectedSignalFlags);
+	virtual HRESULT STDMETHODCALLTYPE	VideoInputFrameArrived(/* in */ IDeckLinkVideoInputFrame* videoFrame, /* in */ IDeckLinkAudioInputPacket* audioPacket);
+
+};
 #endif //DeckLink

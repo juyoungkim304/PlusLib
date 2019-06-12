@@ -32,7 +32,6 @@ public:
   virtual ~vtkInternal()
   {
   }
-	DeckLink* Device;
 
 };
 
@@ -49,7 +48,19 @@ vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()");
 
-	DeckLink* Device = new DeckLink();
+	IDeckLinkIterator* deckLinkIterator;
+	test = new deckLinkDelegate(deckLink);
+	result = CoInitialize(NULL);
+	result = CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_IDeckLinkIterator, (void**)& deckLinkIterator);
+
+	while (deckLinkIterator->Next(&deckLink) == S_OK)
+	{
+		result = deckLink->QueryInterface(IID_IDeckLinkInput, (void**)& deckLinkInput);
+		if (result != S_OK)
+		{
+			fprintf(stderr, "Failed to find input.\n");
+		}
+	}
   this->FrameNumber = 0;
   this->StartThreadForInternalUpdates = true;
   this->InternalUpdateRate = 30;
@@ -59,7 +70,6 @@ vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
 vtkPlusDeckLinkVideoSource::~vtkPlusDeckLinkVideoSource()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::~vtkPlusDeckLinkVideoSource()");
-
   delete Internal;
   Internal = nullptr;
 }
@@ -112,14 +122,12 @@ PlusStatus vtkPlusDeckLinkVideoSource::WriteConfiguration(vtkXMLDataElement* roo
 PlusStatus vtkPlusDeckLinkVideoSource::InternalConnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalConnect");
-  /*
-  if (this->Device == NULL)
-  {
-    this->Device = new DeckLink();
-  }
-  */
 
-  if (this->Device->Connect() != PLUS_SUCCESS)
+	result = deckLinkInput->EnableVideoInput(bmdModeHD1080i5994, bmdFormat8BitYUV, bmdVideoInputEnableFormatDetection);
+	result = deckLinkInput->DisableAudioInput();
+	deckLinkInput->SetCallback(test);
+	result = deckLinkInput->StartStreams();
+  if (result != S_OK)
   {
     LOG_ERROR("vtkPlusDeckLinkVideoSource device initialization failed");
     this->ConnectedToDevice = false;
@@ -135,9 +143,7 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalDisconnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalDisconnect");
   LOG_DEBUG("Disconnect from DeckLink");
-  this->Device->Disconnect();
-  delete this->Device;
-  this->Device = NULL;
+	deckLinkInput->SetCallback(NULL);
   this->ConnectedToDevice = false;
   return PLUS_SUCCESS;
 }
@@ -146,14 +152,16 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalDisconnect()
 PlusStatus vtkPlusDeckLinkVideoSource::InternalStartRecording()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalStartRecording");
-  return PLUS_FAIL;
+	result = deckLinkInput->StartStreams();
+  return PLUS_SUCCESS;
 }
 
 //----------------------------------------------------------------------------
 PlusStatus vtkPlusDeckLinkVideoSource::InternalStopRecording()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalStopRecording");
-  return PLUS_FAIL;
+	deckLinkInput->StopStreams();
+  return PLUS_SUCCESS;
 }
 
 //----------------------------------------------------------------------------

@@ -15,53 +15,73 @@
 #define SAFE_RELEASE(x) { if (x) x->Release(); x = NULL: }
 
 //----------------------------------------------------------------------------
-DeckLink::DeckLink() : result(NULL), deckLinkIterator(NULL), deckLinkInput(NULL), displayModeIterator(NULL)
-{
-  result = CoInitialize(NULL);
-  result = CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_IDeckLinkIterator, (void**)& deckLinkIterator);
-  result = deckLinkInput -> GetDisplayModeIterator(&displayModeIterator);
-}
 
-DeckLink::~DeckLink()
+deckLinkDelegate::deckLinkDelegate(IDeckLink* device)
 {
-  Disconnect();
-  CoUninitialize();
-}
-
-PlusStatus DeckLink::Connect()
-{
-  deckLinkInput->SetCallback(this);
-  return PLUS_SUCCESS;
-}
-
-void DeckLink::Disconnect()
-{
-  result = deckLinkInput -> DisableVideoInput();
-}
-
-void DeckLink::StartRecording(unsigned int videoModeIndex)
-{
-  BMDVideoInputFlags videoInputFlags = bmdVideoInputFlagDefault;
-  result = deckLinkInput->EnableVideoInput(modeList[videoModeIndex]->GetDisplayMode(), bmdFormat8BitYUV, videoInputFlags);
-  deckLinkInput -> StartStreams();
-}
-
-void DeckLink::StopRecording()
-{
-  result = deckLinkInput -> StopStreams();
-  deckLinkInput->SetScreenPreviewCallback(NULL);
-  deckLinkInput->SetCallback(NULL);
+	myDevice = device;
+	refCount = 1;
 
 }
 
-bool DeckLink::CheckProbe()
+HRESULT	STDMETHODCALLTYPE deckLinkDelegate::QueryInterface(REFIID iid, LPVOID* ppv)
 {
-	/*Write this function eventually*/
-	return true;
+	HRESULT			result = E_NOINTERFACE;
+
+	if (ppv == NULL)
+		return E_INVALIDARG;
+
+	// Initialise the return result
+	*ppv = NULL;
+
+	// Obtain the IUnknown interface and compare it the provided REFIID
+	if (iid == IID_IUnknown)
+	{
+		*ppv = this;
+		AddRef();
+		result = S_OK;
+	}
+	else if (iid == IID_IDeckLinkInputCallback)
+	{
+		*ppv = (IDeckLinkInputCallback*)this;
+		AddRef();
+		result = S_OK;
+	}
+	else if (iid == IID_IDeckLinkNotificationCallback)
+	{
+		*ppv = (IDeckLinkNotificationCallback*)this;
+		AddRef();
+		result = S_OK;
+	}
+
+	return result;
 }
 
-/*
-unsigned char* DeckLink::CaptureFrame()
+ULONG STDMETHODCALLTYPE deckLinkDelegate::AddRef(void)
 {
+	return InterlockedIncrement((LONG*)& refCount);
 }
-*/
+
+ULONG STDMETHODCALLTYPE deckLinkDelegate::Release(void)
+{
+	int		newRefValue;
+
+	newRefValue = InterlockedDecrement((LONG*)& refCount);
+	if (newRefValue == 0)
+	{
+		delete this;
+		return 0;
+	}
+
+	return newRefValue;
+}
+
+HRESULT		deckLinkDelegate::VideoInputFormatChanged(/* in */ BMDVideoInputFormatChangedEvents notificationEvents, /* in */ IDeckLinkDisplayMode* newMode, /* in */ BMDDetectedVideoInputFormatFlags detectedSignalFlags)
+{
+	return S_OK;
+}
+
+HRESULT 	deckLinkDelegate::VideoInputFrameArrived(/* in */ IDeckLinkVideoInputFrame* videoFrame, /* in */ IDeckLinkAudioInputPacket* audioPacket)
+{
+	//CHECK THIS CLASS
+	return S_OK;
+}

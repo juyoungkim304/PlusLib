@@ -7,10 +7,10 @@ See License.txt for details.
 #ifndef __vtkPlusDeckLinkVideoSource_h
 #define __vtkPlusDeckLinkVideoSource_h
 
-#include "DeckLink.h"
 #include "vtkPlusDataCollectionExport.h"
 #include "vtkPlusUsDevice.h"
 #include <combaseapi.h>
+#include "DeckLink.h"
 
 // BlackMagic SDK includes
 
@@ -26,6 +26,7 @@ See License.txt for details.
 capture card
 \ingroup PlusLibDataCollection
 */
+
 class vtkPlusDataCollectionExport vtkPlusDeckLinkVideoSource : public vtkPlusDevice
 {
 public:
@@ -72,6 +73,10 @@ private:
   void operator=(const vtkPlusDeckLinkVideoSource&); // Not implemented
   class vtkInternal;
   vtkInternal* Internal;
+	IDeckLink* deckLink;
+	IDeckLinkInput* deckLinkInput;
+	deckLinkDelegate* test;
+	HRESULT result;
 
 };
 

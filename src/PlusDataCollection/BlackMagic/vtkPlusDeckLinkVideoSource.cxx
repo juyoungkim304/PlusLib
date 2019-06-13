@@ -122,10 +122,10 @@ PlusStatus vtkPlusDeckLinkVideoSource::WriteConfiguration(vtkXMLDataElement* roo
 PlusStatus vtkPlusDeckLinkVideoSource::InternalConnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalConnect");
+	deckLinkInput->SetCallback(test);
 
 	result = deckLinkInput->EnableVideoInput(bmdModeHD1080i5994, bmdFormat8BitYUV, bmdVideoInputEnableFormatDetection);
 	result = deckLinkInput->DisableAudioInput();
-	deckLinkInput->SetCallback(test);
 	result = deckLinkInput->StartStreams();
   if (result != S_OK)
   {

@@ -8,6 +8,7 @@
 #define DeckLink_h
 
 #include "igsioCommon.h"
+#include "atlstr.h"
 
 #ifdef _WIN32
 #include "DeckLinkAPI_h.h"
@@ -17,6 +18,8 @@
 
 // STL includes
 #include <vector>
+#include <string>
+
 
 
 class deckLinkDelegate : public IDeckLinkInputCallback
@@ -24,6 +27,9 @@ class deckLinkDelegate : public IDeckLinkInputCallback
 private:
 	int	refCount;
 	IDeckLink* myDevice;
+
+	static void	GetAncillaryDataFromFrame(IDeckLinkVideoInputFrame* frame, BMDTimecodeFormat format, CString* timecodeString, CString* userBitsString);
+
 
 public:
 	deckLinkDelegate(IDeckLink* device);

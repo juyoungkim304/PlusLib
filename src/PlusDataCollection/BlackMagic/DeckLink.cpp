@@ -80,8 +80,67 @@ HRESULT		deckLinkDelegate::VideoInputFormatChanged(/* in */ BMDVideoInputFormatC
 	return S_OK;
 }
 
+typedef struct {
+	CString vitcF1Timecode;
+	CString vitcF1UserBits;
+	CString vitcF2Timecode;
+	CString vitcF2UserBits;
+
+	CString rp188vitc1Timecode;
+	CString rp188vitc1UserBits;
+	CString rp188vitc2Timecode;
+	CString rp188vitc2UserBits;
+	CString rp188ltcTimecode;
+	CString rp188ltcUserBits;
+} AncillaryDataStruct;
+
 HRESULT 	deckLinkDelegate::VideoInputFrameArrived(/* in */ IDeckLinkVideoInputFrame* videoFrame, /* in */ IDeckLinkAudioInputPacket* audioPacket)
 {
 	//CHECK THIS CLASS
+	AncillaryDataStruct		ancillaryData;
+
+	if (videoFrame == NULL)
+		return S_OK;
+
+	// Get the various timecodes and userbits attached to this frame
+	GetAncillaryDataFromFrame(videoFrame, bmdTimecodeVITC, &ancillaryData.vitcF1Timecode, &ancillaryData.vitcF1UserBits);
+	GetAncillaryDataFromFrame(videoFrame, bmdTimecodeVITCField2, &ancillaryData.vitcF2Timecode, &ancillaryData.vitcF2UserBits);
+	GetAncillaryDataFromFrame(videoFrame, bmdTimecodeRP188VITC1, &ancillaryData.rp188vitc1Timecode, &ancillaryData.rp188vitc1UserBits);
+	GetAncillaryDataFromFrame(videoFrame, bmdTimecodeRP188LTC, &ancillaryData.rp188ltcTimecode, &ancillaryData.rp188ltcUserBits);
+	GetAncillaryDataFromFrame(videoFrame, bmdTimecodeRP188VITC2, &ancillaryData.rp188vitc2Timecode, &ancillaryData.rp188vitc2UserBits);
+
 	return S_OK;
+}
+
+void	deckLinkDelegate::GetAncillaryDataFromFrame(IDeckLinkVideoInputFrame* videoFrame, BMDTimecodeFormat timecodeFormat, CString* timecodeString, CString* userBitsString)
+{
+	IDeckLinkTimecode* timecode = NULL;
+	BSTR					timecodeBstr;
+	BMDTimecodeUserBits		userBits = 0;
+
+	if ((videoFrame != NULL) && (timecodeString != NULL) && (userBitsString != NULL)
+		&& (videoFrame->GetTimecode(timecodeFormat, &timecode) == S_OK))
+	{
+		if (timecode->GetString(&timecodeBstr) == S_OK)
+		{
+			*timecodeString = timecodeBstr;
+			SysFreeString(timecodeBstr);
+		}
+		else
+		{
+			*timecodeString = _T("");
+		}
+
+		timecode->GetTimecodeUserBits(&userBits);
+		userBitsString->Format(_T("0x%08X"), userBits);
+
+		timecode->Release();
+	}
+	else
+	{
+		*timecodeString = _T("");
+		*userBitsString = _T("");
+	}
+
+
 }

@@ -49,7 +49,6 @@ vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
   LOG_TRACE("vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()");
 
 	IDeckLinkIterator* deckLinkIterator;
-	test = new deckLinkDelegate(deckLink);
 	result = CoInitialize(NULL);
 	result = CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_IDeckLinkIterator, (void**)& deckLinkIterator);
 
@@ -61,6 +60,10 @@ vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
 			fprintf(stderr, "Failed to find input.\n");
 		}
 	}
+
+	//something null here 0
+	test = new deckLinkDelegate(deckLink);
+
   this->FrameNumber = 0;
   this->StartThreadForInternalUpdates = true;
   this->InternalUpdateRate = 30;
@@ -143,6 +146,7 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalDisconnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalDisconnect");
   LOG_DEBUG("Disconnect from DeckLink");
+	deckLinkInput->StopStreams();
 	deckLinkInput->SetCallback(NULL);
   this->ConnectedToDevice = false;
   return PLUS_SUCCESS;
@@ -168,7 +172,7 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalStopRecording()
 PlusStatus vtkPlusDeckLinkVideoSource::Probe()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::Probe");
-  return PLUS_FAIL;
+  return PLUS_SUCCESS;
 }
 
 //----------------------------------------------------------------------------
@@ -176,5 +180,5 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalUpdate()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalUpdate");
 
-  return PLUS_FAIL;
+  return PLUS_SUCCESS;
 }

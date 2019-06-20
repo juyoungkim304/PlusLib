@@ -10,7 +10,7 @@ See License.txt for details.
 #include "vtkPlusDataCollectionExport.h"
 #include "vtkPlusUsDevice.h"
 #include <combaseapi.h>
-#include "DeckLink.h"
+//#include "DeckLink.h"
 
 // BlackMagic SDK includes
 
@@ -27,7 +27,7 @@ capture card
 \ingroup PlusLibDataCollection
 */
 
-class vtkPlusDataCollectionExport vtkPlusDeckLinkVideoSource : public vtkPlusDevice
+class vtkPlusDataCollectionExport vtkPlusDeckLinkVideoSource : public vtkPlusDevice, public IDeckLinkInputCallback
 {
 public:
   static vtkPlusDeckLinkVideoSource* New();
@@ -62,6 +62,15 @@ public:
   /*! Perform update */
   PlusStatus InternalUpdate();
 
+	virtual HRESULT STDMETHODCALLTYPE	QueryInterface(REFIID iid, LPVOID* ppv);
+	virtual ULONG STDMETHODCALLTYPE		AddRef(void);
+	virtual ULONG STDMETHODCALLTYPE		Release(void);
+
+	// IDeckLinkInputCallback interface
+	virtual HRESULT STDMETHODCALLTYPE	VideoInputFormatChanged(/* in */ BMDVideoInputFormatChangedEvents notificationEvents, /* in */ IDeckLinkDisplayMode* newDisplayMode, /* in */ BMDDetectedVideoInputFormatFlags detectedSignalFlags);
+	virtual HRESULT STDMETHODCALLTYPE	VideoInputFrameArrived(/* in */ IDeckLinkVideoInputFrame* videoFrame, /* in */ IDeckLinkAudioInputPacket* audioPacket);
+
+
 protected:
   vtkPlusDeckLinkVideoSource();
   ~vtkPlusDeckLinkVideoSource();
@@ -75,9 +84,11 @@ private:
   vtkInternal* Internal;
 	IDeckLink* deckLink;
 	IDeckLinkInput* deckLinkInput;
-	deckLinkDelegate* test;
+	//IDeckLinkScreenPreviewCallback* screenPreviewCallback;
+	//deckLinkDelegate* test;
+	void** myFrame;
+	int	refCount;
 	HRESULT result;
-
 };
 
 #endif

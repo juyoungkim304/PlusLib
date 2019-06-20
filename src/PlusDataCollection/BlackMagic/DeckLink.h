@@ -28,11 +28,9 @@ private:
 	int	refCount;
 	IDeckLink* myDevice;
 
-	static void	GetAncillaryDataFromFrame(IDeckLinkVideoInputFrame* frame, BMDTimecodeFormat format, CString* timecodeString, CString* userBitsString);
-
-
 public:
 	deckLinkDelegate(IDeckLink* device);
+	IDeckLinkVideoInputFrame* myFrame;
 
 	virtual HRESULT STDMETHODCALLTYPE	QueryInterface(REFIID iid, LPVOID* ppv);
 	virtual ULONG STDMETHODCALLTYPE		AddRef(void);

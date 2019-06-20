@@ -8,9 +8,14 @@ See License.txt for details.
 
 // Local includes
 #include "vtkPlusDeckLinkVideoSource.h"
-#include "vtkIGSIOAccurateTimer.h"
+#include "vtkPlusDataSource.h"
+#include "vtkPlusChannel.h"
+#include "vtkPlusUsImagingParameters.h"
 
 // VTK includes
+#include <vtkImageData.h>
+#include <vtkImageImport.h>
+#include <vtkObjectFactory.h>
 
 // System includes
 #include <string>
@@ -44,16 +49,19 @@ vtkStandardNewMacro(vtkPlusDeckLinkVideoSource);
 //----------------------------------------------------------------------------
 vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
   : vtkPlusDevice()
-  , Internal(new vtkInternal(this))
+  , Internal(new vtkInternal(this)), refCount(0), myFrame(NULL)
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()");
 
+	//setting up deckLinkIterator to access API
 	IDeckLinkIterator* deckLinkIterator;
 	result = CoInitialize(NULL);
 	result = CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL, IID_IDeckLinkIterator, (void**)& deckLinkIterator);
 
-	while (deckLinkIterator->Next(&deckLink) == S_OK)
+	//iterator creates object representing DeckLink device and assigns address to deckLink
+	if (deckLinkIterator->Next(&deckLink) == S_OK)
 	{
+		//deckLink queried to obtain input interface
 		result = deckLink->QueryInterface(IID_IDeckLinkInput, (void**)& deckLinkInput);
 		if (result != S_OK)
 		{
@@ -61,8 +69,8 @@ vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
 		}
 	}
 
-	//something null here 0
-	test = new deckLinkDelegate(deckLink);
+	//commented out delegate class
+	//test = new deckLinkDelegate(deckLink);
 
   this->FrameNumber = 0;
   this->StartThreadForInternalUpdates = true;
@@ -125,8 +133,12 @@ PlusStatus vtkPlusDeckLinkVideoSource::WriteConfiguration(vtkXMLDataElement* roo
 PlusStatus vtkPlusDeckLinkVideoSource::InternalConnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalConnect");
-	deckLinkInput->SetCallback(test);
+	//deckLinkInput->SetScreenPreviewCallback(screenPreviewCallback);
 
+	//deckLinkInput registers callback that receives video frames in push model
+	deckLinkInput->SetCallback(this);
+
+	//starts input and streams with preset video settings and no audio
 	result = deckLinkInput->EnableVideoInput(bmdModeHD1080i5994, bmdFormat8BitYUV, bmdVideoInputEnableFormatDetection);
 	result = deckLinkInput->DisableAudioInput();
 	result = deckLinkInput->StartStreams();
@@ -146,7 +158,10 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalDisconnect()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalDisconnect");
   LOG_DEBUG("Disconnect from DeckLink");
+
+	//stops stream and ends callback
 	deckLinkInput->StopStreams();
+	//deckLinkInput->SetScreenPreviewCallback(NULL);
 	deckLinkInput->SetCallback(NULL);
   this->ConnectedToDevice = false;
   return PLUS_SUCCESS;
@@ -156,6 +171,8 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalDisconnect()
 PlusStatus vtkPlusDeckLinkVideoSource::InternalStartRecording()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalStartRecording");
+
+	//starts stream only
 	result = deckLinkInput->StartStreams();
   return PLUS_SUCCESS;
 }
@@ -164,6 +181,8 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalStartRecording()
 PlusStatus vtkPlusDeckLinkVideoSource::InternalStopRecording()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalStopRecording");
+
+	//ends stream only
 	deckLinkInput->StopStreams();
   return PLUS_SUCCESS;
 }
@@ -179,6 +198,103 @@ PlusStatus vtkPlusDeckLinkVideoSource::Probe()
 PlusStatus vtkPlusDeckLinkVideoSource::InternalUpdate()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalUpdate");
-
+	this->FrameNumber++;
+	//see VideoInputFrameArrived for update
   return PLUS_SUCCESS;
+
+}
+
+HRESULT	STDMETHODCALLTYPE vtkPlusDeckLinkVideoSource::QueryInterface(REFIID iid, LPVOID* ppv)
+{
+	HRESULT			result = E_NOINTERFACE;
+
+	if (ppv == NULL)
+		return E_INVALIDARG;
+
+	// Initialise the return result
+	*ppv = NULL;
+
+	// Obtain the IUnknown interface and compare it the provided REFIID
+	if (iid == IID_IUnknown)
+	{
+		*ppv = this;
+		AddRef();
+		result = S_OK;
+	}
+	else if (iid == IID_IDeckLinkInputCallback)
+	{
+		*ppv = (IDeckLinkInputCallback*)this;
+		AddRef();
+		result = S_OK;
+	}
+	else if (iid == IID_IDeckLinkNotificationCallback)
+	{
+		*ppv = (IDeckLinkNotificationCallback*)this;
+		AddRef();
+		result = S_OK;
+	}
+
+	return result;
+}
+
+ULONG STDMETHODCALLTYPE vtkPlusDeckLinkVideoSource::AddRef(void)
+{
+	return InterlockedIncrement((LONG*)& refCount);
+}
+
+ULONG STDMETHODCALLTYPE vtkPlusDeckLinkVideoSource::Release(void)
+{
+	int		newRefValue;
+
+	newRefValue = InterlockedDecrement((LONG*)& refCount);
+	if (newRefValue == 0)
+	{
+		delete this;
+		return 0;
+	}
+
+	return newRefValue;
+}
+
+HRESULT		vtkPlusDeckLinkVideoSource::VideoInputFormatChanged(/* in */ BMDVideoInputFormatChangedEvents notificationEvents, /* in */ IDeckLinkDisplayMode* newMode, /* in */ BMDDetectedVideoInputFormatFlags detectedSignalFlags)
+{
+	return S_OK;
+}
+
+//This function runs automatically for each frame as callback is active
+//code for update function is currently here as videoFrame is not held beyond current scope
+HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVideoInputFrame* videoFrame, /* in */ IDeckLinkAudioInputPacket* audioPacket)
+{
+	//CHECK THIS CLASS
+	if (videoFrame == NULL)
+		return S_OK;
+
+	FrameSizeType frameSizeInPix = { 0, 0, 1 };
+
+	vtkPlusDataSource* aSource = NULL;
+
+	if (this->GetFirstActiveOutputVideoSource(aSource) != PLUS_SUCCESS)
+
+	{
+		LOG_ERROR("Unable to retrieve the video source in the Black Magic device.");
+		return PLUS_FAIL;
+	}
+
+	if (aSource->GetNumberOfItems() == 0)
+	{
+		LOG_DEBUG("Set up image buffer for Telemed");
+		aSource->SetPixelType(VTK_UNSIGNED_CHAR);
+		aSource->SetImageType(US_IMG_BRIGHTNESS);
+		aSource->SetInputFrameSize(frameSizeInPix);
+
+		LOG_DEBUG("Frame size: " << frameSizeInPix[0] << "x" << frameSizeInPix[1]
+			<< ", pixel type: " << vtkImageScalarTypeNameMacro(aSource->GetPixelType())
+			<< ", buffer image orientation: " << igsioVideoFrame::GetStringFromUsImageOrientation(aSource->GetInputImageOrientation()));
+	}
+
+	//ERROR HERE!!!
+	//ideally want to pass IDeckLinkVideoInputFrame pointer into buffer
+	PlusStatus status = aSource->AddItem(videoFrame, this->FrameNumber);
+	this->Modified();
+	return S_OK;
 }

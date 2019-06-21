@@ -49,7 +49,7 @@ vtkStandardNewMacro(vtkPlusDeckLinkVideoSource);
 //----------------------------------------------------------------------------
 vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
   : vtkPlusDevice()
-  , Internal(new vtkInternal(this)), refCount(0), myFrame(NULL)
+  , Internal(new vtkInternal(this)), refCount(0)
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()");
 
@@ -282,7 +282,7 @@ HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVi
 
 	if (aSource->GetNumberOfItems() == 0)
 	{
-		LOG_DEBUG("Set up image buffer for Telemed");
+		LOG_DEBUG("Set up image buffer for Deck Link");
 		aSource->SetPixelType(VTK_UNSIGNED_CHAR);
 		aSource->SetImageType(US_IMG_BRIGHTNESS);
 		aSource->SetInputFrameSize(frameSizeInPix);
@@ -294,7 +294,9 @@ HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVi
 
 	//ERROR HERE!!!
 	//ideally want to pass IDeckLinkVideoInputFrame pointer into buffer
-	PlusStatus status = aSource->AddItem(videoFrame, this->FrameNumber);
+	void** myFrame = new void* ();
+	videoFrame->GetBytes(myFrame);
+	PlusStatus status = aSource->AddItem(*myFrame, frameSizeInPix,VTK_UNSIGNED_CHAR, US_IMG_BRIGHTNESS, this->FrameNumber);
 	this->Modified();
 	return S_OK;
 }

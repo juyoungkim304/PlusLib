@@ -70,6 +70,12 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE	VideoInputFormatChanged(/* in */ BMDVideoInputFormatChangedEvents notificationEvents, /* in */ IDeckLinkDisplayMode* newDisplayMode, /* in */ BMDDetectedVideoInputFormatFlags detectedSignalFlags);
 	virtual HRESULT STDMETHODCALLTYPE	VideoInputFrameArrived(/* in */ IDeckLinkVideoInputFrame* videoFrame, /* in */ IDeckLinkAudioInputPacket* audioPacket);
 
+	IDeckLink* deckLink;
+	IDeckLinkInput* deckLinkInput;
+	//IDeckLinkScreenPreviewCallback* screenPreviewCallback;
+	//deckLinkDelegate* test;
+	int	refCount;
+	HRESULT result;
 
 protected:
   vtkPlusDeckLinkVideoSource();
@@ -82,13 +88,7 @@ private:
   void operator=(const vtkPlusDeckLinkVideoSource&); // Not implemented
   class vtkInternal;
   vtkInternal* Internal;
-	IDeckLink* deckLink;
-	IDeckLinkInput* deckLinkInput;
-	//IDeckLinkScreenPreviewCallback* screenPreviewCallback;
-	//deckLinkDelegate* test;
-	void** myFrame;
-	int	refCount;
-	HRESULT result;
+	
 };
 
 #endif

@@ -75,6 +75,8 @@ vtkPlusDeckLinkVideoSource::vtkPlusDeckLinkVideoSource()
   this->FrameNumber = 0;
   this->StartThreadForInternalUpdates = true;
   this->InternalUpdateRate = 30;
+	myFrame = new void* ();
+
 }
 
 //----------------------------------------------------------------------------
@@ -198,7 +200,7 @@ PlusStatus vtkPlusDeckLinkVideoSource::Probe()
 PlusStatus vtkPlusDeckLinkVideoSource::InternalUpdate()
 {
   LOG_TRACE("vtkPlusDeckLinkVideoSource::InternalUpdate");
-	this->FrameNumber++;
+
 	//see VideoInputFrameArrived for update
   return PLUS_SUCCESS;
 
@@ -269,7 +271,9 @@ HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVi
 	if (videoFrame == NULL)
 		return S_OK;
 
-	FrameSizeType frameSizeInPix = { 0, 0, 1 };
+	this->FrameNumber++;
+
+	FrameSizeType frameSizeInPix = { videoFrame->GetWidth(), videoFrame->GetHeight(), 1 };
 
 	vtkPlusDataSource* aSource = NULL;
 
@@ -294,9 +298,8 @@ HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVi
 
 	//ERROR HERE!!!
 	//ideally want to pass IDeckLinkVideoInputFrame pointer into buffer
-	void** myFrame = new void* ();
 	videoFrame->GetBytes(myFrame);
-	PlusStatus status = aSource->AddItem(*myFrame, frameSizeInPix,VTK_UNSIGNED_CHAR, US_IMG_BRIGHTNESS, this->FrameNumber);
+	PlusStatus status = aSource->AddItem(*myFrame, frameSizeInPix, VTK_UNSIGNED_CHAR, US_IMG_BRIGHTNESS, this->FrameNumber);
 	this->Modified();
 	return S_OK;
 }

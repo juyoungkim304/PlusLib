@@ -76,6 +76,7 @@ public:
 	//deckLinkDelegate* test;
 	int	refCount;
 	HRESULT result;
+	void** myFrame;
 
 protected:
   vtkPlusDeckLinkVideoSource();

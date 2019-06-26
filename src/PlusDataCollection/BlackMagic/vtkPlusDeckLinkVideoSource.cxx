@@ -267,6 +267,10 @@ HRESULT		vtkPlusDeckLinkVideoSource::VideoInputFormatChanged(/* in */ BMDVideoIn
 //code for update function is currently here as videoFrame is not held beyond current scope
 HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVideoInputFrame* videoFrame, /* in */ IDeckLinkAudioInputPacket* audioPacket)
 {
+
+	const double toolTimestamp = vtkIGSIOAccurateTimer::GetSystemTime(); // unfiltered timestamp
+	const double filteredTimestamp = toolTimestamp;
+
 	//CHECK THIS CLASS
 	if (videoFrame == NULL)
 		return S_OK;
@@ -296,10 +300,8 @@ HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVi
 			<< ", buffer image orientation: " << igsioVideoFrame::GetStringFromUsImageOrientation(aSource->GetInputImageOrientation()));
 	}
 
-	//ERROR HERE!!!
-	//ideally want to pass IDeckLinkVideoInputFrame pointer into buffer
 	videoFrame->GetBytes(myFrame);
-	PlusStatus status = aSource->AddItem(*myFrame, frameSizeInPix, VTK_UNSIGNED_CHAR, US_IMG_BRIGHTNESS, this->FrameNumber);
+	PlusStatus status = aSource->AddItem(*myFrame, frameSizeInPix, VTK_UNSIGNED_CHAR, US_IMG_BRIGHTNESS, this->FrameNumber, toolTimestamp, filteredTimestamp);
 	this->Modified();
 	return S_OK;
 }

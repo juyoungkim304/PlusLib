@@ -72,8 +72,6 @@ public:
 
 	IDeckLink* deckLink;
 	IDeckLinkInput* deckLinkInput;
-	//IDeckLinkScreenPreviewCallback* screenPreviewCallback;
-	//deckLinkDelegate* test;
 	int	refCount;
 	HRESULT result;
 	void** myFrame;

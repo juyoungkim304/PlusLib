@@ -303,5 +303,28 @@ HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVi
 	videoFrame->GetBytes(myFrame);
 	PlusStatus status = aSource->AddItem(*myFrame, frameSizeInPix, VTK_UNSIGNED_CHAR, US_IMG_BRIGHTNESS, this->FrameNumber, toolTimestamp, filteredTimestamp);
 	this->Modified();
+
+	//test: no error thrown
+	if (!aSource->GetLatestItemHasValidFieldData())
+	{
+		LOG_ERROR("NO FIELD DATA");
+		return PLUS_FAIL;
+	}
+
+	//test: error thrown- no valid transform data
+	/*
+	if (!aSource->GetLatestItemHasValidTransformData())
+	{
+		LOG_ERROR("NO TRANSFORM DATA");
+		return PLUS_FAIL;
+	}
+	*/
+
+	//test: no error thrown
+	if (!aSource->GetLatestItemHasValidVideoData())
+	{
+		LOG_ERROR("NO VIDEO DATA");
+		return PLUS_FAIL;
+	}
 	return S_OK;
 }

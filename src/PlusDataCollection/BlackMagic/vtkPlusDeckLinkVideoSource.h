@@ -74,7 +74,7 @@ public:
 	IDeckLinkInput* deckLinkInput;
 	int	refCount;
 	HRESULT result;
-	void** myFrame;
+	void* myFrame;
 
 protected:
   vtkPlusDeckLinkVideoSource();

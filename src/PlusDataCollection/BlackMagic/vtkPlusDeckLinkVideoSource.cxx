@@ -20,6 +20,14 @@ See License.txt for details.
 // System includes
 #include <string>
 
+#include <opencv2/videoio.hpp>
+#if CV_MAJOR_VERSION > 3
+#include <opencv2/calib3d.hpp>
+#endif
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+
+
 //----------------------------------------------------------------------------
 // vtkPlusDeckLinkVideoSource::vtkInternal
 //----------------------------------------------------------------------------
@@ -141,7 +149,7 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalConnect()
 	deckLinkInput->SetCallback(this);
 
 	//starts input and streams with preset video settings and no audio
-	result = deckLinkInput->EnableVideoInput(bmdModeHD1080i5994, bmdFormat8BitYUV, bmdVideoInputEnableFormatDetection);
+	result = deckLinkInput->EnableVideoInput(bmdModeHD720p60, bmdFormat8BitYUV, bmdVideoInputFlagDefault);
 	result = deckLinkInput->DisableAudioInput();
 	result = deckLinkInput->StartStreams();
   if (result != S_OK)
@@ -267,13 +275,14 @@ HRESULT		vtkPlusDeckLinkVideoSource::VideoInputFormatChanged(/* in */ BMDVideoIn
 //code for update function is currently here as videoFrame is not held beyond current scope
 HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVideoInputFrame* videoFrame, /* in */ IDeckLinkAudioInputPacket* audioPacket)
 {
+	LOG_TRACE("vtkPlusDeckLinkVideoSource::VideoInputFrameArrived()");
 
 	const double toolTimestamp = vtkIGSIOAccurateTimer::GetSystemTime(); // unfiltered timestamp
 	const double filteredTimestamp = toolTimestamp;
 
 	//CHECK THIS CLASS
 	if (videoFrame == NULL)
-		return S_OK;
+		return PLUS_FAIL;
 
 	this->FrameNumber++;
 
@@ -300,8 +309,14 @@ HRESULT 	vtkPlusDeckLinkVideoSource::VideoInputFrameArrived(/* in */ IDeckLinkVi
 			<< ", buffer image orientation: " << igsioVideoFrame::GetStringFromUsImageOrientation(aSource->GetInputImageOrientation()));
 	}
 
-	videoFrame->GetBytes(myFrame);
-	PlusStatus status = aSource->AddItem(*myFrame, frameSizeInPix, VTK_UNSIGNED_CHAR, US_IMG_BRIGHTNESS, this->FrameNumber, toolTimestamp, filteredTimestamp);
+	videoFrame->GetBytes(&myFrame);
+
+	//experiments with CV
+	std::shared_ptr<cv::Mat> uyvy = std::make_shared<cv::Mat>(videoFrame->GetHeight(), videoFrame->GetWidth(), CV_8UC2, myFrame);
+	std::shared_ptr<cv::Mat> image = std::make_shared<cv::Mat>(videoFrame->GetHeight(), videoFrame->GetWidth(), CV_8UC1);
+	cv::cvtColor(*uyvy, *image, cv::COLOR_YUV2GRAY_UYVY);
+
+	PlusStatus status = aSource->AddItem(image->data, frameSizeInPix, VTK_UNSIGNED_CHAR, US_IMG_BRIGHTNESS, this->FrameNumber, toolTimestamp, filteredTimestamp);
 	this->Modified();
 
 	//test: no error thrown

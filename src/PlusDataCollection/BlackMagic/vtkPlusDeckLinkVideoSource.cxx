@@ -149,7 +149,7 @@ PlusStatus vtkPlusDeckLinkVideoSource::InternalConnect()
 	deckLinkInput->SetCallback(this);
 
 	//starts input and streams with preset video settings and no audio
-	result = deckLinkInput->EnableVideoInput(bmdModeHD720p60, bmdFormat8BitYUV, bmdVideoInputFlagDefault);
+	result = deckLinkInput->EnableVideoInput(bmdModeHD720p60, bmdFormat12BitRGB, bmdVideoInputFlagDefault);
 	result = deckLinkInput->DisableAudioInput();
 	result = deckLinkInput->StartStreams();
   if (result != S_OK)
